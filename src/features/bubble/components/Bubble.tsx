@@ -2,7 +2,7 @@ import { createSignal, Show, splitProps } from 'solid-js'
 import styles from '../../../assets/index.css'
 import { BubbleButton } from './BubbleButton'
 import { BubbleParams } from '../types'
-import { Bot, BotProps } from '../../../components/Bot'
+import { Bot, BotProps, isAssistantTyping } from '../../../components/Bot'
 
 export type BubbleProps = BotProps & BubbleParams
 
@@ -28,7 +28,7 @@ export const Bubble = (props: BubbleProps) => {
     return (
         <>
             <style>{styles}</style>
-            <BubbleButton {...bubbleProps.theme?.button} toggleBot={toggleBot} isBotOpened={isBotOpened()} />
+            <BubbleButton {...bubbleProps.theme?.button} toggleBot={toggleBot} isBotOpened={isAssistantTyping()} />
             <div
                 part='bot'
                 style={{
