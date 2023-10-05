@@ -6,6 +6,7 @@ type SendButtonProps = {
     sendButtonColor?: string
     isDisabled?: boolean
     isLoading?: boolean
+    isAssistantResponding?: boolean
     disableIcon?: boolean
 } & JSX.ButtonHTMLAttributes<HTMLButtonElement>
 
@@ -13,7 +14,7 @@ export const SendButton = (props: SendButtonProps) => {
     return (
         <button
             type='submit'
-            disabled={props.isDisabled || props.isLoading}
+            disabled={props.isDisabled || props.isLoading || props.isAssistantResponding}
             {...props}
             class={
                 'py-2 px-4 justify-center font-semibold text-white focus:outline-none flex items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:brightness-100 transition-all filter hover:brightness-90 active:brightness-75 chatbot-button ' +
