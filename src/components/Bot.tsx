@@ -116,6 +116,7 @@ export const Bot = (props: BotProps & { class?: string }) => {
     let botContainer: HTMLDivElement | undefined
 
     const [userInput, setUserInput] = createSignal('')
+    const [isAssistantTyping, setIsAssistantTyping] = createSignal(false)
     const [loading, setLoading] = createSignal(false)
     const [sourcePopupOpen, setSourcePopupOpen] = createSignal(false)
     const [sourcePopupSrc, setSourcePopupSrc] = createSignal({})
@@ -175,6 +176,66 @@ export const Bot = (props: BotProps & { class?: string }) => {
 
     // Handle form submission
     const handleSubmit = async (value: string) => {
+        setIsAssistantTyping(true)
+        setUserInput(value)
+    
+        if (value.trim() === '') {
+            return
+        }
+    
+        setLoading(true)
+        scrollToBottom()
+    
+        // Send user question and history to API
+        const welcomeMessage = props.welcomeMessage ?? defaultWelcomeMessage
+        const messageList = messages().filter((msg) => msg.message !== welcomeMessage)
+    
+        setMessages((prevMessages) => [...prevMessages, { message: value, type: 'userMessage' }])
+    
+        const body: IncomingInput = {
+            question: value,
+            history: messageList
+        }
+    
+        if (props.chatflowConfig) body.overrideConfig = props.chatflowConfig
+    
+        if (isChatFlowAvailableToStream()) body.socketIOClientId = socketIOClientId()
+    
+        const result = await sendMessageQuery({
+            chatflowid: props.chatflowid,
+            apiHost: props.apiHost,
+            body
+        })
+    
+        if (result.data) {
+    
+            const data = handleVectaraMetadata(result.data)
+    
+            if (typeof data === 'object' && data.text && data.sourceDocuments) {
+                if (!isChatFlowAvailableToStream()) {
+                    setMessages((prevMessages) => [
+                        ...prevMessages,
+                        { message: data.text, sourceDocuments: data.sourceDocuments, type: 'apiMessage' }
+                    ])
+                }
+            } else {
+                if (!isChatFlowAvailableToStream()) setMessages((prevMessages) => [...prevMessages, { message: data, type: 'apiMessage' }])
+            }
+            setLoading(false)
+            setUserInput('')
+            scrollToBottom()
+            setIsAssistantTyping(false)
+        }
+        if (result.error) {
+            const error = result.error
+            console.error(error)
+            const err: any = error
+            const errorData = typeof err === 'string'? err :err.response.data || `${err.response.status}: ${err.response.statusText}`
+            handleError(errorData)
+            setIsAssistantTyping(false)
+            return
+        }
+    }
         setUserInput(value)
 
         if (value.trim() === '') {
